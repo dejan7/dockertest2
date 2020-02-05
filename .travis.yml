@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+services: 
+    - docker
+
+before_install:
+    - docker build -t dejan7/docker2-test -f ./client/Dockerfile.dev ./client
+
+script: 
+    - docker run -e CI=true dejan7/docker2-test npm test -- --coverage
+    
+after_success:
+    - docker build -t dejan7/docker2-client ./client
+    - docker build -t dejan7/docker2-nginx ./nginx
+    - docker build -t dejan7/docker2-server ./server
+    - docker build -t dejan7/docker2-worker ./worker
+    # docker login and push
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    - docker push dejan7/docker2-client
+    - docker push dejan7/docker2-nginx
+    - docker push dejan7/docker2-server
+    - docker push dejan7/docker2-worker
